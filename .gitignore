@@ -1,0 +1,18 @@
+# vi
+*.swp
+
+# java
+*.class
+
+# maven
+target/
+
+# maven generated eclipse files
+.classpath
+.project
+.settings/
+
+# eclipse files
+*.keep
+*.keep.*
+
