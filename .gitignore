@@ -4,6 +4,10 @@
 # java
 *.class
 
+# gradle
+.gradle
+build/
+
 # maven
 target/
 
@@ -13,6 +17,7 @@ target/
 .settings/
 
 # eclipse files
+bin/
 *.keep
 *.keep.*
 
