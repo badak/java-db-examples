@@ -1,5 +1,5 @@
-Java DB examples
-================
+Java examples
+=============
 
 The `hsqldb` subdirectory contains a Maven project example for Java code using JDBC and Spring JDBC to call database function and procedure that return one or more result sets. Its test code makes use of in-memory HSQLDB and Hamcrest.
 
