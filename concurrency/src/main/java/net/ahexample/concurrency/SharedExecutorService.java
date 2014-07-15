@@ -25,6 +25,8 @@ public class SharedExecutorService {
     private static class Result {
         private int index;
         private long threadId;
+        private LocalTime startTime;
+        private LocalTime endTime;
     }
     
     
@@ -55,7 +57,9 @@ public class SharedExecutorService {
                 
                 print(executorId, "result[" + result.index
                                     + "], threadId = " + result.threadId
-                                    + ", time = " + LocalTime.now());
+                                    + ", time = " + LocalTime.now()
+                                    + ", startTime = " + result.startTime
+                                    + ", endTime = " + result.endTime);
             }
             catch (InterruptedException | ExecutionException e) {
                 throw e;
@@ -77,13 +81,15 @@ public class SharedExecutorService {
         });
 
         print(executorId, "Waiting for callable results: time = " + LocalTime.now());
-        for (int i = 0; i < futures.size(); i++) {
+        for (int i =  0; i < futures.size(); i++) {
             try {
                 final Result result = futures.get(i).get();
                 
                 print(executorId, "result[" + result.index
                                     + "], threadId = " + result.threadId
-                                    + ", time = " + LocalTime.now());
+                                    + ", time = " + LocalTime.now()
+                                    + ", startTime = " + result.startTime
+                                    + ", endTime = " + result.endTime);
             }
             catch (InterruptedException | ExecutionException e) {
                 throw e;
@@ -146,7 +152,9 @@ public class SharedExecutorService {
                 
                 result.index = index;
                 result.threadId = Thread.currentThread().getId();
+                result.startTime = LocalTime.now();
                 Thread.sleep((numberOfResults - index) * 1000);
+                result.endTime = LocalTime.now();
                 
                 return result;
             });
