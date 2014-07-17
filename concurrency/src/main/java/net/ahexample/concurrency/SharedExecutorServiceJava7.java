@@ -1,5 +1,6 @@
 package net.ahexample.concurrency;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -47,21 +48,21 @@ public class SharedExecutorServiceJava7 {
         final List<Callable<Result>> callables = makeCallables(executorId, MAX_RESULTS);
 
         print(executorId, "Callables = " + callables.size());
-        print(executorId, "Submitting callables: time = " + new Date());
+        print(executorId, "Submitting callables: time = " + getTimeString(new Date()));
         for (Callable<Result> callable : callables) {
             completionService.submit(callable);
         }
 
-        print(executorId, "Waiting for callable results: time = " + new Date());
+        print(executorId, "Waiting for callable results: time = " + getTimeString(new Date()));
         for (int i = 0; i < callables.size(); i++) {
             try {
                 final Result result = completionService.take().get();
                 
                 print(executorId, "result[" + result.index
                                     + "], threadId = " + result.threadId
-                                    + ", time = " + new Date()
-                                    + ", startTime = " + result.startTime
-                                    + ", endTime = " + result.endTime);
+                                    + ", time = " + getTimeString(new Date())
+                                    + ", startTime = " + getTimeString(result.startTime)
+                                    + ", endTime = " + getTimeString(result.endTime));
             }
             catch (InterruptedException | ExecutionException e) {
                 throw e;
@@ -77,21 +78,21 @@ public class SharedExecutorServiceJava7 {
         final List<Future<Result>> futures = new ArrayList<>();
 
         print(executorId, "Callables = " + callables.size());
-        print(executorId, "Submitting callables: time = " + new Date());
+        print(executorId, "Submitting callables: time = " + getTimeString(new Date()));
         for (Callable<Result> callable : callables) {
             futures.add(executorService.submit(callable));
         }
 
-        print(executorId, "Waiting for callable results: time = " + new Date());
+        print(executorId, "Waiting for callable results: time = " + getTimeString(new Date()));
         for (int i =  0; i < futures.size(); i++) {
             try {
                 final Result result = futures.get(i).get();
                 
                 print(executorId, "result[" + result.index
                                     + "], threadId = " + result.threadId
-                                    + ", time = " + new Date()
-                                    + ", startTime = " + result.startTime
-                                    + ", endTime = " + result.endTime);
+                                    + ", time = " + getTimeString(new Date())
+                                    + ", startTime = " + getTimeString(result.startTime)
+                                    + ", endTime = " + getTimeString(result.endTime));
             }
             catch (InterruptedException | ExecutionException e) {
                 throw e;
@@ -109,57 +110,17 @@ public class SharedExecutorServiceJava7 {
         print("main", "Threads = " + MAX_THREADS);
         print("main", "Main thread Id = " + Thread.currentThread().getId());
         
-        threads.add(runTasks(executor, "--- CS_1", 
-                new TaskRunner() {
-                    @Override
-                    public void runTasks(SharedExecutorServiceJava7 es, String id)
-                            throws Exception {
-                        es.runCompletionTasks(id);
-                    }
-            
-        }));
-        
-        threads.add(runTasks(executor, "+++ CS_2", 
-                new TaskRunner() {
-                    @Override
-                    public void runTasks(SharedExecutorServiceJava7 es, String id)
-                            throws Exception {
-                        es.runCompletionTasks(id);
-                    }
-            
-        }));
-        
-        threads.add(runTasks(executor, "=== E_1", 
-                new TaskRunner() {
-                    @Override
-                    public void runTasks(SharedExecutorServiceJava7 es, String id)
-                            throws Exception {
-                        es.runExecutorTasks(id);
-                    }
-            
-        }));
+        threads.add(makeCompletionTaskRunner(executor, "--- CS_1"));
+        threads.add(makeCompletionTaskRunner(executor, "+++ CS_2"));
+        threads.add(makeExecutorTaskRunner(executor, "=== E_1"));
         
         try {
             for (Thread thread : threads) {
                 thread.start();
             }
             
-            while (true) {
-                boolean anyThreadAlive = false;
-                
-                for (Thread thread : threads) {
-                    if (thread.isAlive()) {
-                        anyThreadAlive = true;
-                        break;
-                    }
-                }
-                
-                if (anyThreadAlive) {
+            while (anyThreadAlive(threads)) {
                     Thread.sleep(1000);
-                }
-                else {
-                    break;
-                }
             }
         }
         finally {
@@ -168,7 +129,33 @@ public class SharedExecutorServiceJava7 {
     }
 
 
-    private static Thread runTasks(final ExecutorService executor, final String executorId,
+    private static Thread makeCompletionTaskRunner(final ExecutorService executor, String executorId) {
+        return makeTaskRunnerThread(executor, executorId, 
+                new TaskRunner() {
+                    @Override
+                    public void runTasks(SharedExecutorServiceJava7 es, String id)
+                            throws Exception {
+                        es.runCompletionTasks(id);
+                    }
+            
+        });
+    }
+
+
+    private static Thread makeExecutorTaskRunner(final ExecutorService executor, String executorId) {
+        return makeTaskRunnerThread(executor, executorId, 
+                new TaskRunner() {
+                    @Override
+                    public void runTasks(SharedExecutorServiceJava7 es, String id)
+                            throws Exception {
+                        es.runExecutorTasks(id);
+                    }
+            
+        });
+    }
+
+
+    private static Thread makeTaskRunnerThread(final ExecutorService executor, final String executorId,
                         final TaskRunner taskRunner) {
         return new Thread(new Runnable() {
             @Override
@@ -183,6 +170,22 @@ public class SharedExecutorServiceJava7 {
                 }
             }
         });
+    }
+    
+    
+    private static boolean anyThreadAlive(List<Thread> threads) {
+        for (Thread thread : threads) {
+            if (thread.isAlive()) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    
+    private static void print(String executorId, String str) {
+        System.out.println(executorId + ": " + str);
     }
 
     
@@ -212,7 +215,9 @@ public class SharedExecutorServiceJava7 {
     }
     
     
-    private static void print(String executorId, String str) {
-        System.out.println(executorId + ": " + str);
+    private String getTimeString(Date date) {
+        final SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SSS");
+        
+        return format.format(date);
     }
 }

@@ -107,9 +107,9 @@ public class SharedExecutorService {
         print("main", "Threads = " + MAX_THREADS);
         print("main", "Main thread Id = " + Thread.currentThread().getId());
         
-        threads.add(runTasks(executor, "--- CS_1", (es, id) -> es.runCompletionTasks(id)));
-        threads.add(runTasks(executor, "+++ CS_2", (es, id) -> es.runCompletionTasks(id)));
-        threads.add(runTasks(executor, "=== E_1", (es, id) -> es.runExecutorTasks(id)));
+        threads.add(makeTaskRunnerThread(executor, "--- CS_1", (es, id) -> es.runCompletionTasks(id)));
+        threads.add(makeTaskRunnerThread(executor, "+++ CS_2", (es, id) -> es.runCompletionTasks(id)));
+        threads.add(makeTaskRunnerThread(executor, "=== E_1", (es, id) -> es.runExecutorTasks(id)));
         
         try {
             threads.forEach(thread ->
@@ -126,7 +126,7 @@ public class SharedExecutorService {
     }
 
 
-    private static Thread runTasks(final ExecutorService executor, final String executorId,
+    private static Thread makeTaskRunnerThread(final ExecutorService executor, final String executorId,
                         TaskRunner taskRunner) {
         return new Thread(() -> {
             final SharedExecutorService es = new SharedExecutorService(executor);
@@ -138,6 +138,11 @@ public class SharedExecutorService {
                 e.printStackTrace();
             }
         });
+    }
+    
+    
+    private static void print(String executorId, String str) {
+        System.out.println(executorId + ": " + str);
     }
 
     
@@ -161,10 +166,5 @@ public class SharedExecutorService {
         }
         
         return retval;
-    }
-    
-    
-    private static void print(String executorId, String str) {
-        System.out.println(executorId + ": " + str);
     }
 }

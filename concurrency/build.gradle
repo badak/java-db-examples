@@ -10,3 +10,8 @@ task(runSharedExecutor, type: JavaExec) {
     main = 'net.ahexample.concurrency.SharedExecutorService'
     classpath = sourceSets.main.runtimeClasspath
 }
+
+task(runSharedExecutorJava7, type: JavaExec) {
+    main = 'net.ahexample.concurrency.SharedExecutorServiceJava7'
+    classpath = sourceSets.main.runtimeClasspath
+}
