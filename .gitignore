@@ -1,6 +1,9 @@
 # vi
 *.swp
 
+# Mac OS X
+.DS_Store
+
 # java
 *.class
 
