@@ -24,3 +24,7 @@ bin/
 *.keep
 *.keep.*
 
+# intellij
+.idea/
+*.iml
+
